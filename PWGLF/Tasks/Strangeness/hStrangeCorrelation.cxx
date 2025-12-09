@@ -2119,6 +2119,11 @@ struct HStrangeCorrelation {
         : std::variant<BinningTypePP, BinningTypePbPb>{BinningTypePbPb{{axesConfigurations.axisVtxZ, axesConfigurations.axisMult}, true}};
 
     std::visit([&](auto const& binning) {
+      histos.fill(HIST("MixingQA/hSECollisionBins"), binning.getBin({collision.posZ(), cent}));
+    },
+               colBinning);
+
+    std::visit([&](auto const& binning) {
       for (auto const& [collision1, collision2] : soa::selfCombinations(binning, mixingParameter, -1, collisions, collisions)) {
         double cent1 = doPPAnalysis ? collision1.centFT0M() : collision1.centFT0C();
         double cent2 = doPPAnalysis ? collision2.centFT0M() : collision2.centFT0C();
