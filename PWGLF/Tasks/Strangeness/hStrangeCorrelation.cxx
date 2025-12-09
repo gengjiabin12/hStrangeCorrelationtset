@@ -21,6 +21,7 @@
 /// \author David Dobrigkeit Chinellato (david.dobrigkeit.chinellato@cern.ch)
 /// \author Zhongbao Yin (Zhong-Bao.Yin@cern.ch)
 
+#include "PWGLF/DataModel/DrvCollisions.h"
 #include "PWGLF/DataModel/LFHStrangeCorrelationTables.h"
 
 #include "Common/Core/Zorro.h"
@@ -52,6 +53,8 @@ using namespace o2::framework::expressions;
 using TracksComplete = soa::Join<aod::Tracks, aod::TracksExtra, aod::TracksDCA>;
 using V0DatasWithoutTrackX = soa::Join<aod::V0Indices, aod::V0Cores>;
 using V0DatasWithoutTrackXMC = soa::Join<aod::V0Indices, aod::V0Cores, aod::McV0Labels>;
+using BinningTypePP = ColumnBinningPolicy<aod::collision::PosZ, aod::cent::CentFT0M>;
+using BinningTypePbPb = ColumnBinningPolicy<aod::collision::PosZ, aod::cent::CentFT0C>;
 
 struct HStrangeCorrelation {
   // for efficiency corrections if requested
@@ -245,9 +248,6 @@ struct HStrangeCorrelation {
   TH3F* hEfficiencyUncertaintyHadronMult;
   TH1F* hPurityUncertaintyHadron;
   TH2F* hPurityUncertaintyHadronMult;
-
-  using BinningTypePP = ColumnBinningPolicy<aod::collision::PosZ, aod::cent::CentFT0M>;
-  using BinningTypePbPb = ColumnBinningPolicy<aod::collision::PosZ, aod::cent::CentFT0C>;
 
   // collision slicing for mixed events
   Preslice<aod::TriggerTracks> collisionSliceTracks = aod::triggerTracks::collisionId;
@@ -1694,7 +1694,8 @@ struct HStrangeCorrelation {
                                 aod::AssocHadrons const& assocHadrons, aod::TriggerTracks const& triggerTracks,
                                 TracksComplete const&, aod::BCsWithTimestamps const&)
   {
-    BinningTypePP colBinning{{axesConfigurations.axisVtxZ, axesConfigurations.axisMult}, true}; // true is for 'ignore overflows' (true by default). Underflows and overflows will have bin -1.
+    using BinningTypePP = ColumnBinningPolicy<aod::collision::PosZ, aod::cent::CentFT0M>;
+    BinningTypePP colBinning{{axesConfigurations.axisVtxZ, axesConfigurations.axisMult}, true};
 
     // ________________________________________________
     // skip if desired trigger not found
@@ -1776,10 +1777,11 @@ struct HStrangeCorrelation {
                             aod::AssocV0s const& associatedV0s, aod::TriggerTracks const& triggerTracks,
                             V0DatasWithoutTrackX const&, TracksComplete const&, aod::BCsWithTimestamps const&)
   {
+    // using BinningTypePP = ColumnBinningPolicy<aod::collision::PosZ, aod::cent::CentFT0M>;
+    // using BinningTypePbPb = ColumnBinningPolicy<aod::collision::PosZ, aod::cent::CentFT0C>;
     std::variant<BinningTypePP, BinningTypePbPb> colBinning =
       doPPAnalysis
-        ? std::variant<BinningTypePP, BinningTypePbPb>{
-            BinningTypePP{{axesConfigurations.axisVtxZ, axesConfigurations.axisMult}, true}}
+        ? std::variant<BinningTypePP, BinningTypePbPb>{BinningTypePP{{axesConfigurations.axisVtxZ, axesConfigurations.axisMult}, true}}
         : std::variant<BinningTypePP, BinningTypePbPb>{BinningTypePbPb{{axesConfigurations.axisVtxZ, axesConfigurations.axisMult}, true}};
 
     double cent = doPPAnalysis ? collision.centFT0M() : collision.centFT0C();
@@ -1883,6 +1885,7 @@ struct HStrangeCorrelation {
                                  aod::AssocV0s const&, aod::AssocCascades const& associatedCascades, aod::TriggerTracks const& triggerTracks,
                                  V0DatasWithoutTrackX const&, aod::CascDatas const&, TracksComplete const&, aod::BCsWithTimestamps const&)
   {
+
     std::variant<BinningTypePP, BinningTypePbPb> colBinning =
       doPPAnalysis
         ? std::variant<BinningTypePP, BinningTypePbPb>{
@@ -2001,6 +2004,7 @@ struct HStrangeCorrelation {
                               soa::Join<aod::AssocHadrons, aod::AssocPID> const& associatedPions, soa::Join<aod::TriggerTracks, aod::TriggerTrackExtras> const& triggerTracks,
                               TracksComplete const&, aod::BCsWithTimestamps const&)
   {
+    // using BinningTypePP = ColumnBinningPolicy<aod::collision::PosZ, aod::cent::CentFT0M>;
     BinningTypePP colBinning{{axesConfigurations.axisVtxZ, axesConfigurations.axisMult}, true};
     // ________________________________________________
     // skip if desired trigger not found
@@ -2066,6 +2070,7 @@ struct HStrangeCorrelation {
                                  aod::AssocHadrons const& assocHadrons, aod::TriggerTracks const& triggerTracks,
                                  TracksComplete const&, aod::BCsWithTimestamps const&)
   {
+    // using BinningTypePP = ColumnBinningPolicy<aod::collision::PosZ, aod::cent::CentFT0M>;
     BinningTypePP colBinning{{axesConfigurations.axisVtxZ, axesConfigurations.axisMult}, true};
     for (auto const& [collision1, collision2] : soa::selfCombinations(colBinning, mixingParameter, -1, collisions, collisions)) {
       auto bc = collision1.bc_as<aod::BCsWithTimestamps>();
@@ -2108,62 +2113,29 @@ struct HStrangeCorrelation {
     }
   }
 
-  void processMixedEventHV0s(soa::Join<aod::Collisions, aod::EvSels, aod::CentFT0Ms, aod::CentFT0Cs, aod::PVMults> const& collisions,
-                             aod::AssocV0s const& associatedV0s, aod::TriggerTracks const& triggerTracks,
-                             V0DatasWithoutTrackX const&, TracksComplete const&, aod::BCsWithTimestamps const&)
+  void processMixedEventHV0s(aod::DrvCollisions const& collisions)
   {
+    using BinningTypePP = ColumnBinningPolicy<aod::drvcollision::PosZ, aod::drvcollision::CentFT0M>;
+    using BinningTypePbPb = ColumnBinningPolicy<aod::drvcollision::PosZ, aod::drvcollision::CentFT0C>;
+    // using BinningTypePP = ColumnBinningPolicy<aod::collision::PosZ, aod::cent::CentFT0M>;
+    // using BinningTypePbPb = ColumnBinningPolicy<aod::collision::PosZ, aod::cent::CentFT0C>;
     std::variant<BinningTypePP, BinningTypePbPb> colBinning =
       doPPAnalysis
-        ? std::variant<BinningTypePP, BinningTypePbPb>{
-            BinningTypePP{{axesConfigurations.axisVtxZ, axesConfigurations.axisMult}, true}}
+        ? std::variant<BinningTypePP, BinningTypePbPb>{BinningTypePP{{axesConfigurations.axisVtxZ, axesConfigurations.axisMult}, true}}
         : std::variant<BinningTypePP, BinningTypePbPb>{BinningTypePbPb{{axesConfigurations.axisVtxZ, axesConfigurations.axisMult}, true}};
-
     std::visit([&](auto const& binning) {
-      histos.fill(HIST("MixingQA/hSECollisionBins"), binning.getBin({collision.posZ(), cent}));
+      for (auto const& collision : collisions) {
+        double cent1 = doPPAnalysis ? collision.centFT0M() : collision.centFT0C();
+        histos.fill(HIST("MixingQA/hSECollisionBins"), binning.getBin({collision.posZ(), cent1}));
+      }
     },
                colBinning);
 
     std::visit([&](auto const& binning) {
       for (auto const& [collision1, collision2] : soa::selfCombinations(binning, mixingParameter, -1, collisions, collisions)) {
         double cent1 = doPPAnalysis ? collision1.centFT0M() : collision1.centFT0C();
-        double cent2 = doPPAnalysis ? collision2.centFT0M() : collision2.centFT0C();
-        auto bc = collision1.template bc_as<aod::BCsWithTimestamps>();
-        auto bField = getMagneticField(bc.timestamp());
-        // ________________________________________________
-        if (efficiencyFlags.applyEfficiencyCorrection) {
-          initEfficiencyFromCCDB(bc);
-        }
-        // ________________________________________________
-        // skip if desired trigger not found
-        if (triggerPresenceMap.size() > 0 && (!TESTBIT(triggerPresenceMap[collision1.globalIndex()], triggerBinToSelect) || !TESTBIT(triggerPresenceMap[collision2.globalIndex()], triggerBinToSelect))) {
-          continue;
-        }
 
-        // Perform basic event selection on both collisions
-        if ((doPPAnalysis && (!isCollisionSelected(collision1) || !isCollisionSelected(collision2))) || (!doPPAnalysis && (!isCollisionSelectedPbPb(collision1, true) || (!isCollisionSelectedPbPb(collision2, true))))) {
-          continue;
-        }
-        if (cent1 > axisRanges[5][1] || cent1 < axisRanges[5][0])
-          continue;
-        if (cent2 > axisRanges[5][1] || cent2 < axisRanges[5][0])
-          continue;
-
-        if (!doprocessMixedEventHCascades && doMixingQAandEventQA) {
-          if (collision1.globalIndex() == collision2.globalIndex()) {
-            histos.fill(HIST("MixingQA/hMixingQA"), 0.0f); // same-collision pair counting
-          }
-          histos.fill(HIST("MixingQA/hMEpvz1"), collision1.posZ());
-          histos.fill(HIST("MixingQA/hMEpvz2"), collision2.posZ());
-          histos.fill(HIST("MixingQA/hMECollisionBins"), binning.getBin({collision1.posZ(), cent1}));
-        }
-        // ________________________________________________
-        // Do slicing
-        auto slicedTriggerTracks = triggerTracks.sliceBy(collisionSliceTracks, collision1.globalIndex());
-        auto slicedAssocV0s = associatedV0s.sliceBy(collisionSliceV0s, collision2.globalIndex());
-        // ________________________________________________
-        // Do hadron - V0 correlations
-        if (doFullCorrelationStudy)
-          fillCorrelationsV0(slicedTriggerTracks, slicedAssocV0s, true, collision1.posX(), collision1.posY(), collision1.posZ(), cent1, bField);
+        histos.fill(HIST("MixingQA/hMECollisionBins"), binning.getBin({collision1.posZ(), cent1}));
       }
     },
                colBinning);
@@ -2173,6 +2145,9 @@ struct HStrangeCorrelation {
                                   aod::AssocV0s const&, aod::AssocCascades const& associatedCascades, aod::TriggerTracks const& triggerTracks,
                                   V0DatasWithoutTrackX const&, aod::CascDatas const&, TracksComplete const&, aod::BCsWithTimestamps const&)
   {
+    // using BinningTypePP = ColumnBinningPolicy<aod::collision::PosZ, aod::cent::CentFT0M>;
+    // using BinningTypePbPb = ColumnBinningPolicy<aod::collision::PosZ, aod::cent::CentFT0C>;
+
     std::variant<BinningTypePP, BinningTypePbPb> colBinning =
       doPPAnalysis
         ? std::variant<BinningTypePP, BinningTypePbPb>{
@@ -2228,6 +2203,7 @@ struct HStrangeCorrelation {
                                soa::Join<aod::AssocHadrons, aod::AssocPID> const& assocPions, soa::Join<aod::TriggerTracks, aod::TriggerTrackExtras> const& triggerTracks,
                                TracksComplete const&, aod::BCsWithTimestamps const&)
   {
+    // using BinningTypePP = ColumnBinningPolicy<aod::collision::PosZ, aod::cent::CentFT0M>;
     BinningTypePP colBinning{{axesConfigurations.axisVtxZ, axesConfigurations.axisMult}, true};
     for (auto const& [collision1, collision2] : soa::selfCombinations(colBinning, mixingParameter, -1, collisions, collisions)) {
       auto bc = collision1.bc_as<aod::BCsWithTimestamps>();
