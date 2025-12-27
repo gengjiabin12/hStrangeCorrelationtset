@@ -91,4 +91,5 @@ DECLARE_SOA_TABLE(BCandTime, "AOD", "BCANDTIME",
                   drvcollision::Timestamp,
                   drvcollision::RunNumber, drvcollision::GlobalBC);
 } // namespace o2::aod
+
 #endif
