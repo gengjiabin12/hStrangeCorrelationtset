@@ -232,7 +232,7 @@ struct HStrangeDerivedData {
     if (track.eta() > systCuts.triggerEtaMax || track.eta() < systCuts.triggerEtaMin) {
       return false;
     }
-     if (track.pt() > systCuts.triggerPtCutMax || track.pt() < systCuts.triggerPtCutMin) {
+    if (track.pt() > systCuts.triggerPtCutMax || track.pt() < systCuts.triggerPtCutMin) {
       return false;
     }
     if (track.tpcNClsCrossedRows() < systCuts.minTPCNCrossedRows) {
@@ -304,7 +304,8 @@ struct HStrangeDerivedData {
       return false;
     if (posdau.tpcNClsCrossedRows() < systCuts.minTPCNCrossedRows)
       return false;
-
+    if (v0.dcaV0daughters() > systCuts.dcaV0dau)
+      return false;
     if (std::abs(posdau.tpcNSigmaPi()) < strangedEdxNSigmaLoose && std::abs(negdau.tpcNSigmaPi()) < strangedEdxNSigmaLoose) {
       if (doPPAnalysis || (v0.distovertotmom(collision.posX(), collision.posY(), collision.posZ()) * o2::constants::physics::MassK0Short < systCuts.lifetimecutK0S &&
                            std::abs(v0.dcapostopv()) > systCuts.dcapostopvK0S && std::abs(v0.dcanegtopv()) > systCuts.dcanegtopvK0S &&
