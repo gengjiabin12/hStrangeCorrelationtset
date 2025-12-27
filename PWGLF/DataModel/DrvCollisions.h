@@ -92,4 +92,4 @@ DECLARE_SOA_TABLE(BCandTime, "AOD", "BCANDTIME",
                   drvcollision::RunNumber, drvcollision::GlobalBC);
 } // namespace o2::aod
 
-#endif
+#endif // PWGLF_DATAMODEL_DRVCOLLISION_H_
