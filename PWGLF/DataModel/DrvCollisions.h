@@ -8,8 +8,8 @@
 // In applying this license CERN does not waive the privileges and immunities
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
-#ifndef PWGLF_DATAMODEL_DRVCOLLISION_H_
-#define PWGLF_DATAMODEL_DRVCOLLISION_H_
+#ifndef PWGLF_DATAMODEL_DRVCOLLISIONS_H_
+#define PWGLF_DATAMODEL_DRVCOLLISIONS_H_
 
 #include "Framework/ASoA.h"
 #include "Framework/AnalysisDataModel.h"
@@ -92,4 +92,4 @@ DECLARE_SOA_TABLE(BCandTime, "AOD", "BCANDTIME",
                   drvcollision::RunNumber, drvcollision::GlobalBC);
 } // namespace o2::aod
 
-#endif // PWGLF_DATAMODEL_DRVCOLLISION_H_
+#endif // PWGLF_DATAMODEL_DRVCOLLISIONS_H_
